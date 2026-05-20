@@ -1,0 +1,34 @@
+services:
+  openhands:
+    build:
+      context: ./
+      dockerfile: ./containers/app/Dockerfile
+    image: openhands-dokploy:latest
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      AGENT_SERVER_IMAGE_REPOSITORY: ${AGENT_SERVER_IMAGE_REPOSITORY:-ghcr.io/openhands/agent-server}
+      AGENT_SERVER_IMAGE_TAG: ${AGENT_SERVER_IMAGE_TAG:-1.22.1-python}
+      WORKSPACE_MOUNT_PATH: ${WORKSPACE_MOUNT_PATH:-${WORKSPACE_HOST_PATH:-../files/workspace}}
+    expose:
+      - "3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - openhands-state:/.openhands
+      - ${WORKSPACE_HOST_PATH:-../files/workspace}:/opt/workspace_base
+    networks:
+      - dokploy-network
+    pull_policy: build
+    stdin_open: true
+    tty: true
+
+volumes:
+  openhands-state:
+
+networks:
+  dokploy-network:
+    external: true
